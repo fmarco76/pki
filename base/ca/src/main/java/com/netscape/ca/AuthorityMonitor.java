@@ -40,7 +40,7 @@ public class AuthorityMonitor implements Runnable {
 
     public final static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuthorityMonitor.class);
 
-    private boolean running = true;
+    public boolean running = true;
 
     public AuthorityMonitor() {
     }

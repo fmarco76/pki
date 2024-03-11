@@ -42,7 +42,7 @@ public class CACertRequestClient extends Client {
     public final static Logger logger = LoggerFactory.getLogger(CACertRequestClient.class);
 
     public CACertRequestClient(PKIClient client) throws Exception {
-        super(client, "ca", "certrequests");
+        super(client, "ca", "v2", "certrequests");
     }
 
     public CertRequestInfo getRequest(RequestId id) throws Exception {

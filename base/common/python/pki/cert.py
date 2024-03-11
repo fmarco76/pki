@@ -605,10 +605,10 @@ class CertClient(object):
 
         self.connection = connection
 
-        self.cert_url = '/rest/certs'
-        self.agent_cert_url = '/rest/agent/certs'
-        self.cert_requests_url = '/rest/certrequests'
-        self.agent_cert_requests_url = '/rest/agent/certrequests'
+        self.cert_url = '/v2/certs'
+        self.agent_cert_url = '/v2/agent/certs'
+        self.cert_requests_url = '/v2/certrequests'
+        self.agent_cert_requests_url = '/v2/agent/certrequests'
 
         if connection.subsystem is None:
             self.cert_url = '/ca' + self.cert_url

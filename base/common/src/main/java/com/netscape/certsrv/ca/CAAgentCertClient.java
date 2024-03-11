@@ -37,7 +37,7 @@ public class CAAgentCertClient extends Client {
     public final static Logger logger = LoggerFactory.getLogger(CAAgentCertClient.class);
 
     public CAAgentCertClient(PKIClient client) throws Exception {
-        super(client, "ca", "agent/certs");
+        super(client, "ca", "v2", "agent/certs");
     }
 
     public CertData reviewCert(CertId id) throws Exception {

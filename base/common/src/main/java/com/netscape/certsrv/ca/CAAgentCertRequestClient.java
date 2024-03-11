@@ -39,7 +39,7 @@ public class CAAgentCertRequestClient extends Client {
     public final static Logger logger = LoggerFactory.getLogger(CAAgentCertRequestClient.class);
 
     public CAAgentCertRequestClient(PKIClient client) throws Exception {
-        super(client, "ca", "agent/certrequests");
+        super(client, "ca", "v2", "agent/certrequests");
     }
 
     public CertRequestInfos listRequests(String requestState, String requestType, RequestId start, Integer pageSize,

@@ -48,7 +48,7 @@ public class AuthorityMonitor implements Runnable {
 
     public final static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuthorityMonitor.class);
 
-    private boolean running = true;
+    public boolean running = true;
 
     public AsyncLoader loader = new AsyncLoader(10 /* 10s timeout */);
     public boolean foundHostCA;

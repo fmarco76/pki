@@ -25,11 +25,11 @@ import com.netscape.certsrv.client.PKIConnection;
 /**
  * This class provides blocking socket factory for PKIConnection.
  */
-public class DefaultSocketFactory implements SchemeLayeredSocketFactory {
+public class BlockingSocketFactory implements SchemeLayeredSocketFactory {
 
     PKIConnection connection;
 
-    public DefaultSocketFactory(PKIConnection connection) {
+    public BlockingSocketFactory(PKIConnection connection) {
         this.connection = connection;
     }
 

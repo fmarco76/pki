@@ -109,6 +109,7 @@ jobs:
           # enrollment should fail
           docker exec pki pki \
               -n caadmin \
+              --ignore-cert-status OSCP_SERVER_ERROR \
               ca-cert-issue \
               --profile caServerCert \
               --csr-file sslserver.csr \

@@ -3431,10 +3431,10 @@ class ESTSubsystem(PKISubsystem):
             exist_ok=False,
             force=True)
 
-    def get_subsystem_cert(self, tag):
+    # def get_subsystem_cert(self, tag):
 
-        logger.debug('ESTSubsystem.get_subsystem_cert(%s)', tag)
-        return None
+    #     logger.debug('ESTSubsystem.get_subsystem_cert(%s)', tag)
+    #     return None
 
     def validate_system_cert(self, tag):
         """

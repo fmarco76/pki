@@ -1,4 +1,4 @@
-name: EST with ds realm on separate instance
+name: EST on separate instance with provided certificates
 
 on: workflow_call
 
@@ -92,17 +92,63 @@ jobs:
           docker exec -i est ldapadd -x -H ldap://estds.example.com:3389 \
               -D "cn=Directory Manager"  -w Secret.123 \
               -f /usr/share/pki/est/conf/realm/ds/create.ldif
-          
-      - name: Install EST
+
+      - name: Install EST (step 1)
         run: |
           docker exec est pkispawn \
-              -f /usr/share/pki/server/examples/installation/est.cfg \
+              -f /usr/share/pki/server/examples/installation/est-standalone.cfg \
               -s EST \
               -D est_realm_url=ldap://estds.example.com:3389 \
               -D pki_ca_uri=https://ca.example.com:8443 \
-              -D pki_security_domain_hostname=ca.example.com \
-              -D pki_cert_chain_path=$SHARED/ca_signing.crt \
-              -D pki_cert_chain_nickname=caSigning \
+              -D est_ca_user_password= \
+              -D pki_cert_chain_nickname=ca_signing \
+              -D pki_subsystem_csr_path=${SHARED}/subsystem.csr \
+              -D pki_sslserver_csr_path=${SHARED}/sslserver.csr \
+              -D pki_cert_chain_path=${SHARED}/ca_signing.crt \
+              -D pki_external_step_two=False \
+              -v
+
+      - name: Issue subsystem cert
+        run: |
+          docker exec ca openssl req -text -noout -in ${SHARED}/subsystem.csr
+          docker exec ca pki \
+              -n caadmin \
+              ca-cert-issue \
+              --profile caSubsystemCert \
+              --csr-file ${SHARED}/subsystem.csr \
+              --output-file ${SHARED}/subsystem.crt
+          docker exec ca openssl x509 -text -noout -in ${SHARED}/subsystem.crt
+
+      - name: Issue SSL server cert
+        run: |
+          docker exec ca openssl req -text -noout -in ${SHARED}/sslserver.csr
+          docker exec ca pki \
+              -n caadmin \
+              ca-cert-issue \
+              --profile caServerCert \
+              --csr-file ${SHARED}/sslserver.csr \
+              --output-file ${SHARED}/sslserver.crt
+          docker exec ca openssl x509 -text -noout -in ${SHARED}/sslserver.crt
+
+      - name: Stop CA
+        run: |
+          docker exec ca pki-server stop --wait
+
+      - name: Install EST (step 2)
+        run: |
+          docker exec est pkispawn \
+              -f /usr/share/pki/server/examples/installation/est-standalone.cfg \
+              -s EST \
+              -D est_realm_url=ldap://estds.example.com:3389 \
+              -D pki_ca_uri=https://ca.example.com:8443 \
+              -D est_ca_user_password= \
+              -D pki_cert_chain_nickname=ca_signing \
+              -D pki_subsystem_csr_path=${SHARED}/subsystem.csr \
+              -D pki_subsystem_cert_path=${SHARED}/subsystem.crt \
+              -D pki_sslserver_csr_path=${SHARED}/sslserver.csr \
+              -D pki_sslserver_cert_path=${SHARED}/sslserver.crt \
+              -D pki_cert_chain_path=${SHARED}/ca_signing.crt \
+              -D pki_external_step_two=True \
               -v
 
       - name: Check EST server base dir after installation
@@ -124,7 +170,6 @@ jobs:
           lrwxrwxrwx pkiuser pkiuser lib -> /usr/share/pki/server/lib
           lrwxrwxrwx pkiuser pkiuser logs -> /var/log/pki/pki-tomcat
           drwxrwx--- pkiuser pkiuser temp
-          drwxr-xr-x pkiuser pkiuser webapps
           drwxrwx--- pkiuser pkiuser work
           EOF
 
@@ -151,7 +196,6 @@ jobs:
           lrwxrwxrwx pkiuser pkiuser logging.properties -> /usr/share/pki/server/conf/logging.properties
           -rw-rw---- pkiuser pkiuser password.conf
           -rw-rw---- pkiuser pkiuser server.xml
-          -rw-rw---- pkiuser pkiuser serverCertNick.conf
           -rw-rw---- pkiuser pkiuser tomcat.conf
           lrwxrwxrwx pkiuser pkiuser web.xml -> /etc/tomcat/web.xml
           EOF
@@ -176,9 +220,7 @@ jobs:
           drwxrwx--- pkiuser pkiuser est
           -rw-r--r-- pkiuser pkiuser host-manager.$DATE.log
           -rw-r--r-- pkiuser pkiuser localhost.$DATE.log
-          -rw-r--r-- pkiuser pkiuser localhost_access_log.$DATE.txt
           -rw-r--r-- pkiuser pkiuser manager.$DATE.log
-          drwxr-xr-x pkiuser pkiuser pki
           EOF
 
           diff expected output
@@ -203,6 +245,30 @@ jobs:
 
           diff expected output
 
+      - name: Start CA
+        run: |
+          docker exec ca pki-server start --wait          
+
+      - name: Add EST subsystem user in CA
+        run: |
+          # create EST subsystem user in CA
+          docker exec client pki \
+              -U https://ca.example.com:8443 \
+              -n caadmin \
+              ca-user-add \
+              --fullName "EST-est.example.com-8443" \
+              --type agentType \
+              --cert-file $SHARED/subsystem.crt \
+              EST-est.example.com-8443
+
+          # allow EST to create certificates
+          docker exec client pki \
+              -U https://kra.example.com:8443 \
+              -n caaadmin \
+              ca-user-membership-add \
+              EST-est.example.com-8443 \
+              "Certificate Manager Agents"
+
       - name: Test CA certs
         run: |
           docker exec est curl -o cacert.p7 -k https://est.example.com:8443/.well-known/est/cacerts
@@ -213,10 +279,10 @@ jobs:
           docker exec est openssl x509 -in $SHARED/ca_signing.crt -text -noout | tee expected
           diff expected actual
 
-      - name: Add EST user
+      - name: Create EST user
         run: |
           docker exec -i est ldapadd -x -H ldap://estds.example.com:3389 \
-              -D "cn=Directory Manager"  -w Secret.123 <<EOF
+              -D "cn=Directory Manager"  -w Secret.123 << EOF
           dn: uid=est-test-user,ou=people,dc=est,dc=pki,dc=example,dc=com
           objectClass: top
           objectClass: person
@@ -227,11 +293,11 @@ jobs:
           cn: test.example.com
           userPassword: Secret.123
           EOF
-          
+
       - name: Add EST user to EST Users group
         run: |
           docker exec -i est ldapmodify -x -H ldap://estds.example.com:3389 \
-              -D "cn=Directory Manager"  -w Secret.123 <<EOF
+              -D "cn=Directory Manager"  -w Secret.123 << EOF
           dn: cn=EST Users,ou=groups,dc=est,dc=pki,dc=example,dc=com
           changetype: modify
           add: uniqueMember
@@ -240,7 +306,7 @@ jobs:
 
       - name: Install est client
         run: |
-          docker exec est dnf copr enable -y @pki/libest 
+          docker exec est dnf copr enable -y @pki/libest
           docker exec est dnf install -y libest
 
       - name: Enroll certificate

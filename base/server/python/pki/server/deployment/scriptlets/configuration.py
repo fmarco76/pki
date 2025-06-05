@@ -147,6 +147,11 @@ class PkiScriptlet(pkiscriptlet.AbstractBasePkiScriptlet):
             logger.info('Setting up subsystem user')
             deployer.setup_subsystem_user(subsystem, system_certs['subsystem'])
 
+        if config.str2bool(deployer.mdict['pki_security_domain_setup']) and \
+                subsystem.type == 'EST':
+            logger.info('Setting up EST user')
+            deployer.create_est_subsystem_user(subsystem)
+
         if config.str2bool(deployer.mdict['pki_security_domain_setup']):
             deployer.setup_security_domain_manager(subsystem)
 

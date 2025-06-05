@@ -334,7 +334,7 @@ class ConfigurationFile:
             #
             # ADD checks for valid types of Stand-alone PKI subsystems here
             #
-            if self.subsystem != "KRA" and self.subsystem != "OCSP":
+            if self.subsystem not in ["KRA", "OCSP", "EST"]:
                 logger.error(
                     log.PKI_STANDALONE_UNSUPPORTED_1,
                     self.subsystem)

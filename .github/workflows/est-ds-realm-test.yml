@@ -71,10 +71,9 @@ jobs:
 
       - name: Add CA EST user
         run: |
-          docker exec pki pki -n caadmin ca-group-add "EST RA Agents"
           docker exec pki pki -n caadmin ca-user-add \
               est-ra-1 --fullName "EST RA 1" --password Secret.est
-          docker exec pki pki -n caadmin ca-group-member-add "EST RA Agents" est-ra-1
+          docker exec pki pki -n caadmin ca-group-member-add "Enterprise EST Administrators" est-ra-1
 
       - name: Configure CA est profile
         run: |
@@ -92,7 +91,7 @@ jobs:
       - name: Install EST
         run: |
           docker exec pki pkispawn \
-              -f /usr/share/pki/server/examples/installation/est.cfg \
+              -f /usr/share/pki/server/examples/installation/est-standalone.cfg \
               -s EST \
               -D est_realm_url=ldap://ds.example.com:3389 \
               -v

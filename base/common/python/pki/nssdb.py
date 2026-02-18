@@ -298,7 +298,10 @@ class NSSDatabase(object):
             self.internal_password_file = self.password_file
 
         self.passwords = passwords
-        self.password_conf = password_conf
+        if password_conf and os.path.isfile(password_conf):
+            self.password_conf = password_conf
+        else:
+            self.password_conf = None
 
     def run(self,
             cmd,
@@ -1906,7 +1909,8 @@ class NSSDatabase(object):
         tmpdir = self.create_tmpdir()
         try:
             token = self.get_effective_token(token)
-            password_file = self.get_password_file(tmpdir, token)
+            need_all_tokens = token and not internal_token(token)
+            password_file = self.get_password_file(tmpdir, token, all_tokens=need_all_tokens)
             cmd = [
                 'pki',
                 '-d', self.directory
@@ -1920,7 +1924,11 @@ class NSSDatabase(object):
                 cmd.extend(['-f', self.password_conf])
 
             elif password_file:
-                cmd.extend(['-C', password_file])
+                # Use -f for multi-token password files, -C for single password
+                if need_all_tokens:
+                    cmd.extend(['-f', password_file])
+                else:
+                    cmd.extend(['-C', password_file])
 
             cmd.extend([
                 'nss-cert-show',
@@ -2022,7 +2030,8 @@ class NSSDatabase(object):
         tmpdir = self.create_tmpdir()
         try:
             token = self.get_effective_token(token)
-            password_file = self.get_password_file(tmpdir, token)
+            need_all_tokens = token and not internal_token(token)
+            password_file = self.get_password_file(tmpdir, token, all_tokens=need_all_tokens)
 
             cmd = [
                 'pki',
@@ -2038,7 +2047,11 @@ class NSSDatabase(object):
                 cmd.extend(['-f', self.password_conf])
 
             elif password_file:
-                cmd.extend(['-C', password_file])
+                # Use -f for multi-token password files, -C for single password
+                if need_all_tokens:
+                    cmd.extend(['-f', password_file])
+                else:
+                    cmd.extend(['-C', password_file])
 
             cmd.extend([
                 'nss-cert-export',

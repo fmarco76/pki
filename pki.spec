@@ -147,7 +147,6 @@ ExcludeArch: i686
 %bcond_without server
 %bcond_without acme
 %bcond_without ca
-%bcond_without esc
 %bcond_without est
 %bcond_without kra
 %bcond_without ocsp
@@ -490,17 +489,6 @@ Conflicts:        %{product_id}-console-theme < %{version}
 
 %if %{with tests}
 Requires:         %{product_id}-tests = %{version}-%{release}
-%endif
-
-%if %{with esc}
-# Make certain that this 'meta' package requires the latest version(s)
-# of ALL PKI clients -- except for s390/s390x where 'esc' is not built
-%ifnarch s390 s390x
-Requires:         esc >= 1.1.2
-%endif
-%else
-Obsoletes:        esc <= 1.1.2
-Conflicts:        esc <= 1.1.2
 %endif
 
 # description for top-level package (unless there is a separate meta package)
@@ -2275,7 +2263,6 @@ fi
 %{_datadir}/pki/common-ui/
 %{_datadir}/pki/server/webapps/pki/ca
 %{_datadir}/pki/server/webapps/pki/css
-%{_datadir}/pki/server/webapps/pki/esc
 %{_datadir}/pki/server/webapps/pki/fonts
 %{_datadir}/pki/server/webapps/pki/images
 %{_datadir}/pki/server/webapps/pki/kra

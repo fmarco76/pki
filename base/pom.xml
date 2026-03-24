@@ -97,14 +97,16 @@
                                     <exclude>**/rest/v1/**/*.java</exclude>
                                     <!-- Exclude v1 base classes -->
                                     <exclude>com/netscape/cms/servlet/base/PKIService.java</exclude>
+                                    <exclude>com/netscape/cms/servlet/base/SubsystemService.java</exclude>
                                     <exclude>org/dogtagpki/server/rest/v1/PKIApplication.java</exclude>
                                     <!-- Exclude v1 JAX-RS Resource interfaces -->
                                     <exclude>com/netscape/certsrv/**/*Resource.java</exclude>
                                     <exclude>org/dogtagpki/**/*Resource.java</exclude>
                                     <!-- Exclude v1 JAX-RS annotations -->
                                     <exclude>com/netscape/certsrv/base/PATCH.java</exclude>
-                                    <!-- Exclude TPS v1 service outside v1 directory -->
+                                    <!-- Exclude TPS v1 services outside v1 directory -->
                                     <exclude>org/dogtagpki/server/tps/TPSAccountService.java</exclude>
+                                    <exclude>org/dogtagpki/server/tps/config/ConfigService.java</exclude>
                                 </excludes>
                             </configuration>
                         </plugin>
@@ -118,14 +120,16 @@
                                     <sourceFileExclude>**/rest/v1/**/*.java</sourceFileExclude>
                                     <!-- Exclude v1 base classes -->
                                     <sourceFileExclude>com/netscape/cms/servlet/base/PKIService.java</sourceFileExclude>
+                                    <sourceFileExclude>com/netscape/cms/servlet/base/SubsystemService.java</sourceFileExclude>
                                     <sourceFileExclude>org/dogtagpki/server/rest/v1/PKIApplication.java</sourceFileExclude>
                                     <!-- Exclude v1 JAX-RS Resource interfaces -->
                                     <sourceFileExclude>com/netscape/certsrv/**/*Resource.java</sourceFileExclude>
                                     <sourceFileExclude>org/dogtagpki/**/*Resource.java</sourceFileExclude>
                                     <!-- Exclude v1 JAX-RS annotations -->
                                     <sourceFileExclude>com/netscape/certsrv/base/PATCH.java</sourceFileExclude>
-                                    <!-- Exclude TPS v1 service outside v1 directory -->
+                                    <!-- Exclude TPS v1 services outside v1 directory -->
                                     <sourceFileExclude>org/dogtagpki/server/tps/TPSAccountService.java</sourceFileExclude>
+                                    <sourceFileExclude>org/dogtagpki/server/tps/config/ConfigService.java</sourceFileExclude>
                                 </sourceFileExcludes>
                             </configuration>
                         </plugin>

@@ -62,6 +62,7 @@ string(FIND "${REST_API_VERSIONS_TO_BUILD}" "v1" v1_pos)
 if(${v1_pos} EQUAL -1)
     # v1 not found - exclude v1-specific packages
     set(exclude_packages
+        "com.netscape.certsrv.base"
         "com.netscape.certsrv.authority"
         "com.netscape.certsrv.cert"
         "com.netscape.certsrv.profile"
@@ -79,8 +80,12 @@ if(${v1_pos} EQUAL -1)
     )
     list(JOIN exclude_packages ":" exclude_str)
     set(exclude_option "-exclude" "${exclude_str}")
+    # Don't include JAX-RS API and RESTEasy JARs for v2-only builds
+    set(jaxrs_classpath "")
 else()
     set(exclude_option "")
+    # Include JAX-RS API and RESTEasy JARs for v1 builds
+    set(jaxrs_classpath "${JAXRS_API_JAR} ${RESTEASY_JAXRS_JAR}")
 endif()
 
 javadoc(pki-javadoc
@@ -103,13 +108,12 @@ javadoc(pki-javadoc
         ${LDAPJDK_JAR}
         ${SERVLET_JAR} ${TOMCAT_CATALINA_JAR} ${TOMCAT_UTIL_JAR}
         ${HTTPCLIENT_JAR} ${HTTPCORE_JAR}
-        ${JAXRS_API_JAR}
+        ${jaxrs_classpath}
         ${JACKSON_CORE_JAR}
         ${JACKSON_ANNOTATIONS_JAR}
         ${JACKSON_DATABIND_JAR}
         ${JACKSON_MODULE_JAXB_ANNOTATIONS_JAR}
         ${JAKARTA_ANNOTATION_API_JAR}
-        ${RESTEASY_JAXRS_JAR}
         ${JSS_JAR}
         ${JSS_TOMCAT_JAR}
         ${JSS_TOMCAT_9_0_JAR}

@@ -73,6 +73,9 @@ if(${v1_pos} EQUAL -1)
         "com.netscape.certsrv.tps"
         "com.netscape.certsrv.user"
         "org.dogtagpki.common"
+        "org.dogtagpki.ca"
+        "org.dogtagpki.kra"
+        "org.dogtagpki.job"
     )
     list(JOIN exclude_packages ":" exclude_str)
     set(exclude_option "-exclude" "${exclude_str}")

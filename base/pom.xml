@@ -100,7 +100,7 @@
                                     <exclude>org/dogtagpki/server/rest/v1/PKIApplication.java</exclude>
                                     <!-- Exclude v1 JAX-RS Resource interfaces -->
                                     <exclude>com/netscape/certsrv/**/*Resource.java</exclude>
-                                    <exclude>org/dogtagpki/common/ConfigResource.java</exclude>
+                                    <exclude>org/dogtagpki/**/*Resource.java</exclude>
                                     <!-- Exclude TPS v1 service outside v1 directory -->
                                     <exclude>org/dogtagpki/server/tps/TPSAccountService.java</exclude>
                                 </excludes>
@@ -119,7 +119,7 @@
                                     <sourceFileExclude>org/dogtagpki/server/rest/v1/PKIApplication.java</sourceFileExclude>
                                     <!-- Exclude v1 JAX-RS Resource interfaces -->
                                     <sourceFileExclude>com/netscape/certsrv/**/*Resource.java</sourceFileExclude>
-                                    <sourceFileExclude>org/dogtagpki/common/ConfigResource.java</sourceFileExclude>
+                                    <sourceFileExclude>org/dogtagpki/**/*Resource.java</sourceFileExclude>
                                     <!-- Exclude TPS v1 service outside v1 directory -->
                                     <sourceFileExclude>org/dogtagpki/server/tps/TPSAccountService.java</sourceFileExclude>
                                 </sourceFileExcludes>

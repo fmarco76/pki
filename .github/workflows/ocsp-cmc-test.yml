@@ -33,20 +33,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=cads.example.com \
+              --network=example \
+              --network-alias=cads.example.com \
               --password=Secret.123 \
               cads
 
-      - name: Connect CA DS container to network
-        run: docker network connect example cads --alias cads.example.com
-
       - name: Set up CA container
         run: |
-          tests/bin/runner-init.sh ca
-        env:
-          HOSTNAME: ca.example.com
-
-      - name: Connect CA container to network
-        run: docker network connect example ca --alias ca.example.com
+          tests/bin/runner-init.sh \
+              --hostname=ca.example.com \
+              --network=example \
+              --network-alias=ca.example.com \
+              ca
 
       - name: Install CA in CA container
         run: |
@@ -76,20 +74,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=ocspds.example.com \
+              --network=example \
+              --network-alias=ocspds.example.com \
               --password=Secret.123 \
               ocspds
 
-      - name: Connect OCSP DS container to network
-        run: docker network connect example ocspds --alias ocspds.example.com
-
       - name: Set up OCSP container
         run: |
-          tests/bin/runner-init.sh ocsp
-        env:
-          HOSTNAME: ocsp.example.com
-
-      - name: Connect OCSP container to network
-        run: docker network connect example ocsp --alias ocsp.example.com
+          tests/bin/runner-init.sh \
+              --hostname=ocsp.example.com \
+              --network=example \
+              --network-alias=ocsp.example.com \
+              ocsp
 
       - name: Install OCSP in OCSP container (step 1)
         run: |
@@ -270,15 +266,6 @@ jobs:
               --pkcs12-password Secret.123
           docker exec ocsp pki -n ocspadmin ocsp-user-show ocspadmin
 
-      - name: Gather artifacts
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh cads
-          tests/bin/pki-artifacts-save.sh ca
-          tests/bin/ds-artifacts-save.sh ocspds
-          tests/bin/pki-artifacts-save.sh ocsp
-        continue-on-error: true
-
       - name: Remove OCSP from OCSP container
         run: docker exec ocsp pkidestroy -s OCSP -v
 
@@ -324,10 +311,3 @@ jobs:
         if: always()
         run: |
           docker exec ocsp find /var/lib/pki/pki-tomcat/logs/ocsp -name "debug.*" -exec cat {} \;
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ocsp-cmc
-          path: /tmp/artifacts

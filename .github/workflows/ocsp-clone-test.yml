@@ -1297,6 +1297,12 @@ jobs:
         run: |
           docker logs primaryds
 
+      - name: Check for primary PKI core dumps
+        if: failure()
+        run: |
+          docker exec primary ls -l
+          docker exec primary find / -path /proc -prune -o -name "hs_err_pid*.log" -exec cat {} \;
+
       - name: Check primary PKI server systemd journal
         if: always()
         run: |
@@ -1327,6 +1333,12 @@ jobs:
         run: |
           docker logs secondaryds
 
+      - name: Check for secondary PKI core dumps
+        if: failure()
+        run: |
+          docker exec secondary ls -l
+          docker exec secondary find / -path /proc -prune -o -name "hs_err_pid*.log" -exec cat {} \;
+
       - name: Check secondary PKI server systemd journal
         if: always()
         run: |
@@ -1356,6 +1368,12 @@ jobs:
         if: always()
         run: |
           docker logs tertiaryds
+
+      - name: Check for tertiary PKI core dumps
+        if: failure()
+        run: |
+          docker exec tertiary ls -l
+          docker exec tertiary find / -path /proc -prune -o -name "hs_err_pid*.log" -exec cat {} \;
 
       - name: Check tertiary PKI server systemd journal
         if: always()

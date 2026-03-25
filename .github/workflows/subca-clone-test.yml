@@ -275,3 +275,21 @@ jobs:
 
       - name: Remove primary sub-CA
         run: docker exec primary-subca pkidestroy -s CA -v
+
+      - name: Check for root CA core dumps
+        if: failure()
+        run: |
+          docker exec root-ca ls -l
+          docker exec root-ca find / -path /proc -prune -o -name "hs_err_pid*.log" -exec cat {} \;
+
+      - name: Check for primary sub-CA core dumps
+        if: failure()
+        run: |
+          docker exec primary-subca ls -l
+          docker exec primary-subca find / -path /proc -prune -o -name "hs_err_pid*.log" -exec cat {} \;
+
+      - name: Check for secondary sub-CA core dumps
+        if: failure()
+        run: |
+          docker exec secondary-subca ls -l
+          docker exec secondary-subca find / -path /proc -prune -o -name "hs_err_pid*.log" -exec cat {} \;

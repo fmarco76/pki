@@ -208,15 +208,6 @@ jobs:
               --pkcs12-password Secret.123
           docker exec secondary pki -n caadmin tps-user-show tpsadmin
 
-      - name: Gather artifacts from primary containers
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh primaryds
-          tests/bin/pki-artifacts-save.sh primary
-          tests/bin/ds-artifacts-save.sh secondaryds
-          tests/bin/pki-artifacts-save.sh secondary
-        continue-on-error: true
-
       - name: Remove TPS from secondary PKI container
         run: docker exec secondary pkidestroy -s TPS -v
 
@@ -322,10 +313,3 @@ jobs:
         if: always()
         run: |
           docker exec secondary find /var/lib/pki/pki-tomcat/logs/tps -name "debug.*" -exec cat {} \;
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tps-clone
-          path: /tmp/artifacts

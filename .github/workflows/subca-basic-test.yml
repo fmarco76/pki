@@ -33,20 +33,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=rootds.example.com \
+              --network=example \
+              --network-alias=rootds.example.com \
               --password=Secret.123 \
               rootds
 
-      - name: Connect root DS container to network
-        run: docker network connect example rootds --alias rootds.example.com
-
       - name: Set up root PKI container
         run: |
-          tests/bin/runner-init.sh root
-        env:
-          HOSTNAME: root.example.com
-
-      - name: Connect root PKI container to network
-        run: docker network connect example root --alias root.example.com
+          tests/bin/runner-init.sh \
+              --hostname=root.example.com \
+              --network=example \
+              --network-alias=root.example.com \
+              root
 
       - name: Install root CA in root container
         run: |
@@ -78,20 +76,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=subds.example.com \
+              --network=example \
+              --network-alias=subds.example.com \
               --password=Secret.123 \
               subds
 
-      - name: Connect subordinate DS container to network
-        run: docker network connect example subds --alias subds.example.com
-
       - name: Set up subordinate PKI container
         run: |
-          tests/bin/runner-init.sh subordinate
-        env:
-          HOSTNAME: sub.example.com
-
-      - name: Connect subordinate PKI container to network
-        run: docker network connect example subordinate --alias sub.example.com
+          tests/bin/runner-init.sh \
+              --hostname=sub.example.com \
+              --network=example \
+              --network-alias=sub.example.com \
+              subordinate
 
       - name: Install subordinate CA in subordinate container
         run: |
@@ -206,38 +202,8 @@ jobs:
           docker exec subordinate /usr/lib64/nss/unsupported-tools/vfychain -v -d /root/.dogtag/nssdb/ -u 11 -a -p -p -g leaf -h requireFreshInfo -m ocsp -s failIfNoInfo ca_signing.crt 2>&1 | tee actual
           diff expected actual
 
-      - name: Gather artifacts from root containers
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh --output=/tmp/artifacts/root rootds
-          tests/bin/pki-artifacts-save.sh root
-        continue-on-error: true
-
-      - name: Gather artifacts from subordinate containers
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh --output=/tmp/artifacts/subordinate subds
-          tests/bin/pki-artifacts-save.sh subordinate
-        continue-on-error: true
-
       - name: Remove subordinate CA from subordinate container
         run: docker exec subordinate pkidestroy -s CA -v
 
       - name: Remove root CA from root container
         run: docker exec root pkidestroy -s CA -v
-
-      - name: Upload artifacts from root container
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: subca-basic-root
-          path: |
-            /tmp/artifacts/root
-
-      - name: Upload artifacts from subordinate container
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: subca-basic-subordinate
-          path: |
-            /tmp/artifacts/subordinate

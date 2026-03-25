@@ -31,12 +31,11 @@ jobs:
 
       - name: Set up root CA container
         run: |
-          tests/bin/runner-init.sh root-ca
-        env:
-          HOSTNAME: root-ca.example.com
-
-      - name: Connect root CA container to network
-        run: docker network connect example root-ca --alias root-ca.example.com
+          tests/bin/runner-init.sh \
+              --hostname=root-ca.example.com \
+              --network=example \
+              --network-alias=root-ca.example.com \
+              root-ca
 
       - name: Create root CA in NSS database
         run: |
@@ -59,20 +58,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=primary-ds.example.com \
+              --network=example \
+              --network-alias=primary-ds.example.com \
               --password=Secret.123 \
               primary-ds
 
-      - name: Connect primary DS container to network
-        run: docker network connect example primary-ds --alias primary-ds.example.com
-
       - name: Set up primary sub-CA container
         run: |
-          tests/bin/runner-init.sh primary-subca
-        env:
-          HOSTNAME: primary-subca.example.com
-
-      - name: Connect primary sub-CA container to network
-        run: docker network connect example primary-subca --alias primary-subca.example.com
+          tests/bin/runner-init.sh \
+              --hostname=primary-subca.example.com \
+              --network=example \
+              --network-alias=primary-subca.example.com \
+              primary-subca
 
       - name: Install dependencies
         run: |
@@ -291,20 +288,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=secondary-ds.example.com \
+              --network=example \
+              --network-alias=secondary-ds.example.com \
               --password=Secret.123 \
               secondary-ds
 
-      - name: Connect secondary DS container to network
-        run: docker network connect example secondary-ds --alias secondary-ds.example.com
-
       - name: Set up secondary sub-CA container
         run: |
-          tests/bin/runner-init.sh secondary-subca
-        env:
-          HOSTNAME: secondary-subca.example.com
-
-      - name: Connect secondary sub-CA container to network
-        run: docker network connect example secondary-subca --alias secondary-subca.example.com
+          tests/bin/runner-init.sh \
+              --hostname=secondary-subca.example.com \
+              --network=example \
+              --network-alias=secondary-subca.example.com \
+              secondary-subca
 
       - name: Install dependencies in secondary PKI container
         run: |
@@ -587,38 +582,8 @@ jobs:
 
           diff subca-certs.primary subca-certs.secondary
 
-      - name: Gather artifacts from primary sub-CA
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh --output=/tmp/artifacts/pki primary-ds
-          tests/bin/pki-artifacts-save.sh primary-subca
-        continue-on-error: true
-
-      - name: Gather artifacts from secondary sub-CA
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh --output=/tmp/artifacts/pki secondary-ds
-          tests/bin/pki-artifacts-save.sh secondary-subca
-        continue-on-error: true
-
       - name: Remove secondary sub-CA
         run: docker exec secondary-subca pkidestroy -s CA -v
 
       - name: Remove primary sub-CA
         run: docker exec primary-subca pkidestroy -s CA -v
-
-      - name: Upload artifacts from primary sub-CA
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: subca-clone-hsm-primary
-          path: |
-            /tmp/artifacts/primary-subca
-
-      - name: Upload artifacts from secondary sub-CA
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: subca-clone-hsm-secondary
-          path: |
-            /tmp/artifacts/secondary-subca

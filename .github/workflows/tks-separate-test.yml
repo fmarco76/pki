@@ -32,20 +32,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=cads.example.com \
+              --network=example \
+              --network-alias=cads.example.com \
               --password=Secret.123 \
               cads
 
-      - name: Connect CA DS container to network
-        run: docker network connect example cads --alias cads.example.com
-
       - name: Set up CA container
         run: |
-          tests/bin/runner-init.sh ca
-        env:
-          HOSTNAME: ca.example.com
-
-      - name: Connect CA container to network
-        run: docker network connect example ca --alias ca.example.com
+          tests/bin/runner-init.sh \
+              --hostname=ca.example.com \
+              --network=example \
+              --network-alias=ca.example.com \
+              ca
 
       - name: Install CA in CA container
         run: |
@@ -65,20 +63,18 @@ jobs:
           tests/bin/ds-create.sh \
               --image=${{ env.DS_IMAGE }} \
               --hostname=tksds.example.com \
+              --network=example \
+              --network-alias=tksds.example.com \
               --password=Secret.123 \
               tksds
 
-      - name: Connect TKS DS container to network
-        run: docker network connect example tksds --alias tksds.example.com
-
       - name: Set up TKS container
         run: |
-          tests/bin/runner-init.sh tks
-        env:
-          HOSTNAME: tks.example.com
-
-      - name: Connect TKS container to network
-        run: docker network connect example tks --alias tks.example.com
+          tests/bin/runner-init.sh \
+              --hostname=tks.example.com \
+              --network=example \
+              --network-alias=tks.example.com \
+              tks
 
       - name: Install TKS in TKS container
         run: |
@@ -130,15 +126,6 @@ jobs:
               --pkcs12 ${SHARED}/ca_admin_cert.p12 \
               --pkcs12-password Secret.123
           docker exec tks pki -n caadmin --ignore-banner tks-user-show tksadmin
-
-      - name: Gather artifacts
-        if: always()
-        run: |
-          tests/bin/ds-artifacts-save.sh cads
-          tests/bin/pki-artifacts-save.sh ca
-          tests/bin/ds-artifacts-save.sh tksds
-          tests/bin/pki-artifacts-save.sh tks
-        continue-on-error: true
 
       - name: Remove TKS
         run: |
@@ -201,10 +188,3 @@ jobs:
         if: always()
         run: |
           docker exec tks find /var/lib/pki/pki-tomcat/logs/tks -name "debug.*" -exec cat {} \;
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tks-separate
-          path: /tmp/artifacts

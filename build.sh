@@ -53,6 +53,9 @@ WITH_JAVA=true
 WITH_CONSOLE=
 RUN_TESTS=true
 
+# V1 API status: enabled, deprecated, disabled, dropped
+V1_API_STATUS="enabled"
+
 PKG_LIST="base, server, ca, kra, ocsp, tks, tps, acme, est, javadoc, theme, meta, tests, debug"
 ALL_PKGS=( $(echo "$PKG_LIST" | sed 's/ *, */ /g') )
 
@@ -95,6 +98,7 @@ usage() {
     echo "    --with-pkgs=<list>     Build packages specified in comma-separated list only."
     echo "    --without-pkgs=<list>  Build everything except packages specified in comma-separated list."
     echo "    --without-test         Do not run unit tests."
+    echo "    --v1-api-status=<status> Set v1 API status: enabled (default), deprecated, disabled, dropped."
     echo " -v,--verbose              Run in verbose mode."
     echo "    --debug                Run in debug mode."
     echo "    --help                 Show help message."
@@ -404,6 +408,18 @@ while getopts v-: arg ; do
         without-test)
             RUN_TESTS=false
             ;;
+        v1-api-status=*)
+            V1_API_STATUS="$LONG_OPTARG"
+            case "$V1_API_STATUS" in
+                enabled|deprecated|disabled|dropped)
+                    ;;
+                *)
+                    echo "ERROR: Invalid v1-api-status value: $V1_API_STATUS" >&2
+                    echo "Valid values: enabled, deprecated, disabled, dropped" >&2
+                    exit 1
+                    ;;
+            esac
+            ;;
         verbose)
             VERBOSE=true
             ;;
@@ -422,7 +438,7 @@ while getopts v-: arg ; do
         prefix-dir* | include-dir* | lib-dir* | sysconf-dir* | share-dir* | \
         cmake* | c-flags* | java-home* | jni-dir* | \
         unit-dir* | python* | python-dir* | install-dir* | \
-        source-tag* | spec* | with-pkgs* | without-pkgs* | dist*)
+        source-tag* | spec* | with-pkgs* | without-pkgs* | dist* | v1-api-status*)
             echo "ERROR: Missing argument for --$OPTARG option" >&2
             exit 1
             ;;
@@ -749,6 +765,10 @@ if [ "$BUILD_TARGET" = "dist" ] ; then
         OPTIONS+=(-DRUN_TESTS:BOOL=OFF)
     fi
 
+    if [ -n "$V1_API_STATUS" ] ; then
+        OPTIONS+=(-DV1_API_STATUS:STRING="$V1_API_STATUS")
+    fi
+
     $CMAKE "${OPTIONS[@]}"
 
     OPTIONS=()
@@ -939,6 +959,10 @@ if [ "$RUN_TESTS" = false ] ; then
     OPTIONS+=(--without test)
 fi
 
+if [ -n "$V1_API_STATUS" ] ; then
+    OPTIONS+=(--define "v1_api_status $V1_API_STATUS")
+fi
+
 if [ "$DEBUG" = true ] ; then
     echo "rpmbuild -bs" "${OPTIONS[@]}" " $SPEC_FILE"
 fi
@@ -973,6 +997,10 @@ if [ "$VERBOSE" = true ] ; then
 fi
 
 OPTIONS+=(--define "_topdir ${WORK_DIR}")
+
+if [ -n "$V1_API_STATUS" ] ; then
+    OPTIONS+=(--define "v1_api_status $V1_API_STATUS")
+fi
 
 if [ "$DEBUG" = true ] ; then
     echo "rpmbuild --rebuild" "${OPTIONS[@]}" "$SRPM"

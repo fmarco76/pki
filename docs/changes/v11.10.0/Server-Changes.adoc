@@ -22,3 +22,57 @@ pki-server ca-db-vlv-reindex
 *Note:* The reindex operation may take significant time on databases with
 many certificates. For replicated environments, VLV indexes are not
 replicated, so each replica must run these commands independently.
+
+== v1 REST API Deprecation Control ==
+
+A new runtime control mechanism allows administrators to manage the v1 REST API
+lifecycle with three runtime states:
+
+=== enabled (default) ===
+
+The v1 REST API is fully functional with no restrictions. This is the default
+behavior and maintains backward compatibility.
+
+=== deprecated ===
+
+The v1 REST API remains fully functional but logs prominent warning messages
+on each subsystem startup:
+
+----
+======================================================================
+WARNING: v1 REST API is DEPRECATED and will be removed in a future release.
+Please migrate to v2 API as soon as possible.
+======================================================================
+----
+
+Use this state during a migration period to notify administrators and users
+that v1 API support will be removed in the future.
+
+=== disabled ===
+
+The v1 REST API endpoints exist but are not functional. All requests to v1
+endpoints return HTTP 410 Gone with a clean JSON error response:
+
+----
+{
+  "error": "v1 REST API has been disabled",
+  "message": "The v1 REST API has been disabled in this PKI instance. Please use the v2 API instead.",
+  "documentation": "https://www.dogtagpki.org/wiki/PKI_REST_API"
+}
+----
+
+This enforces migration to v2 while maintaining the ability to roll back
+if needed.
+
+=== Runtime Configuration ===
+
+The runtime behavior is determined by the build-time `--v1-api-status` flag
+(see Packaging Changes). Administrators can override the default by setting
+the `v1.api.status` system property in `/etc/pki/<instance>/tomcat.conf`:
+
+----
+JAVA_OPTS="-Dv1.api.status=enabled"
+----
+
+*Note:* Runtime override only works when v1 code is present in the build
+(i.e., not built with `--v1-api-status=dropped`).

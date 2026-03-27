@@ -1,6 +1,9 @@
 package org.dogtagpki.server.kra.rest.v1;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
@@ -27,7 +30,42 @@ public class KRAApplication extends Application {
     private Set<Object> singletons = new LinkedHashSet<>();
     private Set<Class<?>> classes = new LinkedHashSet<>();
 
+    private static String getDefaultV1ApiStatus() {
+        try (InputStream is = KRAApplication.class.getClassLoader().getResourceAsStream("build.properties")) {
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                return props.getProperty("v1.api.status.default", "enabled");
+            }
+        } catch (IOException e) {
+            logger.warn("KRAApplication: Unable to read build.properties, defaulting to enabled", e);
+        }
+        return "enabled";
+    }
+
     public KRAApplication() {
+
+        // Check v1 API status
+        // Use build-time default unless overridden by system property
+        String v1ApiStatus = System.getProperty("v1.api.status", getDefaultV1ApiStatus());
+
+        if ("disabled".equals(v1ApiStatus)) {
+            logger.warn("======================================================================");
+            logger.warn("KRA v1 REST API has been DISABLED.");
+            logger.warn("All v1 endpoints will return HTTP 410 Gone.");
+            logger.warn("Please use v2 API instead.");
+            logger.warn("======================================================================");
+            // Register only the disabled resource which returns clean error messages
+            classes.add(org.dogtagpki.server.rest.v1.V1ApiDisabledResource.class);
+            return;
+        }
+
+        if ("deprecated".equals(v1ApiStatus)) {
+            logger.warn("======================================================================");
+            logger.warn("WARNING: v1 REST API is DEPRECATED and will be removed in a future release.");
+            logger.warn("Please migrate to v2 API as soon as possible.");
+            logger.warn("======================================================================");
+        }
 
         // account
         classes.add(AccountService.class);
